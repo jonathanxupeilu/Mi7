@@ -1,0 +1,51 @@
+{
+  "content_weights": {
+    "holdings_direct": 40,
+    "macro_global": 30,
+    "expert_opinion": 20,
+    "auxiliary": 10
+  },
+  "priority_keywords": [
+    "美联储", "加息", "降息", "通胀", "CPI", "PPI", "GDP",
+    "黄金", "油价", "原油价格", "战争", "制裁", "关税",
+    "煤炭", "新能源", "电动车", "AI", "人工智能", "半导体",
+    "回购", "减持", "增持", "分红", "业绩预告", "年报", "季报"
+  ],
+  "source_weights": {
+    "东方财富公告": 1.5,
+    "东方财富": 1.4,
+    "财联社": 1.3,
+    "财新网": 1.3,
+    "CNBC": 1.3,
+    "Bloomberg Markets": 1.3,
+    "Bloomberg": 1.3,
+    "Reuters Business": 1.3,
+    "Reuters": 1.3,
+    "Financial Times": 1.3,
+    "Wall Street Journal": 1.3,
+    "Seeking Alpha": 1.2,
+    "ZeroHedge": 1.1,
+    "MarketWatch": 1.1,
+    "Investing.com": 1.1,
+    "Nitter": 1.0,
+    "Twitter": 1.0,
+    "雪球": 1.0,
+    "The Economist": 1.0,
+    "证券时报": 1.1,
+    "21世纪经济报道": 1.0,
+    "GitHub Blog": 0.5
+  },
+  "priority_thresholds": {
+    "critical": 70,
+    "high": 40,
+    "medium": 20,
+    "low": 0
+  },
+  "scoring_rules": {
+    "holdings_match": 80,
+    "holdings_alias_match": 70,
+    "keyword_match": 20,
+    "keyword_bonus_2plus": 10,
+    "keyword_bonus_4plus": 20
+  }
+}
