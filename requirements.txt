@@ -1,0 +1,21 @@
+# 数据采集
+requests==2.31.0
+feedparser==6.0.10
+
+# AI处理
+anthropic==0.8.1
+
+# 工具库
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# 数据存储
+# sqlite3  # 内置
+
+# 音频报告生成 (TTS)
+edge-tts>=6.1.0  # Primary: Microsoft Edge TTS (free, good quality)
+gtts>=2.5.0      # Fallback: Google TTS (free)
+# elevenlabs-tts skill via: npx skills add https://github.com/inferen-sh/skills --skill elevenlabs-tts
+
+# 测试
+pytest-asyncio>=0.21.0
