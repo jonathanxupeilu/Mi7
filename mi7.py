@@ -16,6 +16,7 @@ import ssl
 from datetime import datetime, timedelta
 from storage.database import Database
 from output.report_generator import ReportGenerator
+from core.source_orchestrator import SourceOrchestrator
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -34,10 +35,25 @@ class MI7:
         print(f"\nTime window: last {hours} hours")
         print(f"Source: {source}\n")
 
+    def run(self, hours=48, skip_analysis=False, source='all', generate_audio=False, audio_provider='edge'):
+        """运行完整流程：采集 → 存储 → AI分析 → 生成报告"""
+        print("="*60)
+        print("MI7 - Intelligence Report Generation")
+        print("="*60)
+        print(f"\nTime window: last {hours} hours")
+        print(f"Source mode: {source}\n")
+
+        # Initialize orchestrator for smart source selection
+        orchestrator = SourceOrchestrator(self.config)
+        sources_to_use = orchestrator.get_sources_for_mode(source)
+
+        print(f"Active sources: {', '.join(sources_to_use)}")
+        print("-"*60)
+
         items = []
 
-        # 1. 采集数据
-        if source in ['all', 'rss']:
+        # 1. 采集数据 - Tier 1 sources (always on, with caching)
+        if 'rss' in sources_to_use:
             from collectors.rss_collector import RSSCollector
             rss_config = self.config['sources']['rss']['native']
             collector = RSSCollector(rss_config)
@@ -46,36 +62,27 @@ class MI7:
             print(f"  RSS collected: {len(rss_items)} items")
             items.extend(rss_items)
 
-        if source in ['all', 'dfcf']:
+        if 'dfcf' in sources_to_use:
             from collectors.dfcf_collector import DFCFCollector
             print("\n  Collecting from 东方财富...")
             dfcf_collector = DFCFCollector()
             dfcf_items = dfcf_collector.collect_all(limit_per_stock=5)
             print(f"  东方财富 collected: {dfcf_items} items")
 
-        if source in ['all', 'nitter']:
-            nitter_config = self.config['sources'].get('nitter')
-            if nitter_config and nitter_config.get('enabled', False):
-                from collectors.nitter_collector import NitterCollector
-                print("\n  Collecting from Twitter (Nitter)...")
-                nitter_collector = NitterCollector(nitter_config)
-                nitter_items = nitter_collector.collect(hours=hours)
-                print(f"  Nitter collected: {len(nitter_items)} items")
-                items.extend(nitter_items)
-
-        if source in ['all', 'gmail']:
+        if 'notebooklm' in sources_to_use:
             try:
-                from collectors.gmail_collector import GmailCollector
-                print("\n  Collecting from Gmail (Google Alerts)...")
-                gmail_collector = GmailCollector()
-                gmail_items = gmail_collector.collect(hours=hours)
-                print(f"  Gmail collected: {len(gmail_items)} items")
-                items.extend(gmail_items)
+                from collectors.notebooklm_collector import NotebookLMCollector
+                print("\n  Collecting from NotebookLM...")
+                notebooklm_config = self.config['sources']['notebooklm']
+                notebooklm_collector = NotebookLMCollector(notebooklm_config)
+                notebooklm_items = notebooklm_collector.collect(hours=hours)
+                print(f"  NotebookLM: {len(notebooklm_items)} items")
+                items.extend(notebooklm_items)
             except Exception as e:
-                print(f"  Gmail error: {e}")
+                print(f"  NotebookLM error: {e}")
 
-        # 新增：研报采集
-        if source in ['all', 'research']:
+        # Tier 2 sources (conditional/paid)
+        if 'research' in sources_to_use:
             try:
                 from collectors.research_collector import ResearchCollector
                 print("\n  Collecting research reports...")
@@ -85,8 +92,7 @@ class MI7:
             except Exception as e:
                 print(f"  Research error: {e}")
 
-        # 新增：公告采集
-        if source in ['all', 'announcement']:
+        if 'announcement' in sources_to_use:
             try:
                 from collectors.announcement_collector import AnnouncementCollector
                 print("\n  Collecting announcements...")
@@ -96,19 +102,13 @@ class MI7:
             except Exception as e:
                 print(f"  Announcement error: {e}")
 
-        # 新增：NotebookLM 采集
-        if source in ['all', 'notebooklm']:
+        if 'snowball' in sources_to_use:
             try:
-                from collectors.notebooklm_collector import NotebookLMCollector
-                if self.config['sources'].get('notebooklm', {}).get('enabled', False):
-                    print("\n  Collecting from NotebookLM...")
-                    notebooklm_config = self.config['sources']['notebooklm']
-                    notebooklm_collector = NotebookLMCollector(notebooklm_config)
-                    notebooklm_items = notebooklm_collector.collect(hours=hours)
-                    print(f"  NotebookLM: {len(notebooklm_items)} items")
-                    items.extend(notebooklm_items)
+                # Snowball collector would be imported here
+                print("\n  Collecting from Snowball...")
+                print("  Snowball: not yet implemented")
             except Exception as e:
-                print(f"  NotebookLM error: {e}")
+                print(f"  Snowball error: {e}")
 
         # 2. 保存到数据库
         print("\n[2/4] Saving to database...")
@@ -174,8 +174,8 @@ if __name__ == '__main__':
     parser.add_argument('--hours', type=int, default=48, help='采集最近多少小时的内容')
     parser.add_argument('--skip-analysis', action='store_true', help='跳过AI分析')
     parser.add_argument('--source', type=str, default='all',
-                        choices=['all', 'rss', 'dfcf', 'nitter', 'gmail', 'research', 'announcement', 'snowball', 'notebooklm'],
-                        help='选择采集来源：all(全部), rss, dfcf(东方财富), nitter, gmail, research(研报), announcement(公告), snowball(雪球), notebooklm')
+                        choices=['all', 'quick', 'rss', 'dfcf', 'nitter', 'gmail', 'research', 'announcement', 'snowball', 'notebooklm'],
+                        help='选择采集来源：all(全部), quick(仅Tier 1: RSS+DFCF+NotebookLM), rss, dfcf(东方财富), nitter, gmail, research(研报), announcement(公告), snowball(雪球), notebooklm')
     parser.add_argument('--audio', action='store_true', help='同时生成MP3音频报告')
     parser.add_argument('--audio-provider', type=str, default='edge',
                         choices=['edge', 'elevenlabs'],
