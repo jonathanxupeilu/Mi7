@@ -152,3 +152,48 @@ def test_cache_table_exists(temp_db_path):
     conn.close()
     assert result is not None
     assert result[0] == 'dfcf_cache'
+
+
+def test_cache_table_has_indexes(temp_db_path):
+    """RED: dfcf_cache 表应有正确的索引"""
+    from storage.database import Database
+    db = Database(temp_db_path)
+    conn = sqlite3.connect(temp_db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='dfcf_cache'")
+    indexes = [row[0] for row in cursor.fetchall()]
+    conn.close()
+
+    assert 'idx_cache_stock' in indexes
+    assert 'idx_cache_expires' in indexes
+
+
+def test_cache_table_unique_constraint(temp_db_path):
+    """RED: (stock_code, query) 应有唯一约束"""
+    from storage.database import Database
+    import sqlite3
+    db = Database(temp_db_path)
+
+    conn = sqlite3.connect(temp_db_path)
+    cursor = conn.cursor()
+
+    # Insert first record
+    cursor.execute('''
+        INSERT INTO dfcf_cache (stock_code, query, response_data, expires_at)
+        VALUES ('600519', '贵州茅台', '[{}]', datetime('now', '+1 hour'))
+    ''')
+    conn.commit()
+
+    # Try to insert duplicate - should raise IntegrityError
+    try:
+        cursor.execute('''
+            INSERT INTO dfcf_cache (stock_code, query, response_data, expires_at)
+            VALUES ('600519', '贵州茅台', '[{}]', datetime('now', '+1 hour'))
+        ''')
+        conn.commit()
+        assert False, "Should have raised IntegrityError"
+    except sqlite3.IntegrityError:
+        pass  # Expected
+    finally:
+        conn.close()
