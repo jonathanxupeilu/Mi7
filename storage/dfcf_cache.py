@@ -29,7 +29,7 @@ class DFCFCache:
             SELECT response_data FROM dfcf_cache
             WHERE stock_code = ? AND query = ?
             AND expires_at > ?
-        ''', (stock_code, query, datetime.now().isoformat()))
+        ''', (stock_code, query, datetime.now()))
 
         row = cursor.fetchone()
         conn.close()
@@ -53,6 +53,12 @@ class DFCFCache:
 
         expires_at = datetime.now() + timedelta(hours=ttl_hours)
 
+        # 转换 datetime 对象为 ISO 格式字符串
+        def serialize_datetime(obj):
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            raise TypeError(f'Object of type {type(obj)} is not JSON serializable')
+
         cursor.execute('''
             INSERT OR REPLACE INTO dfcf_cache
             (stock_code, query, response_data, expires_at)
@@ -60,8 +66,8 @@ class DFCFCache:
         ''', (
             stock_code,
             query,
-            json.dumps(data),
-            expires_at.isoformat()
+            json.dumps(data, default=serialize_datetime),
+            expires_at
         ))
 
         conn.commit()
@@ -74,7 +80,7 @@ class DFCFCache:
 
         cursor.execute('''
             DELETE FROM dfcf_cache WHERE expires_at < ?
-        ''', (datetime.now().isoformat(),))
+        ''', (datetime.now(),))
 
         deleted = cursor.rowcount
         conn.commit()
@@ -91,7 +97,7 @@ class DFCFCache:
         total = cursor.fetchone()[0]
 
         cursor.execute('SELECT COUNT(*) FROM dfcf_cache WHERE expires_at > ?',
-                       (datetime.now().isoformat(),))
+                       (datetime.now(),))
         valid = cursor.fetchone()[0]
 
         conn.close()

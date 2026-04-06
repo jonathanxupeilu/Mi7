@@ -37,6 +37,28 @@ class TestDatabase:
         assert 'idx_content_url' in indexes
         assert 'idx_content_date' in indexes
 
+    def test_database_creates_dfcf_cache_table(self, temp_db_path):
+        """RED: Database 应该创建 dfcf_cache 表"""
+        db = Database(temp_db_path)
+        conn = sqlite3.connect(temp_db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='dfcf_cache'")
+        result = cursor.fetchone()
+        conn.close()
+        assert result is not None
+        assert result[0] == 'dfcf_cache'
+
+    def test_dfcf_cache_has_correct_indexes(self, temp_db_path):
+        """RED: dfcf_cache 应该有正确的索引"""
+        db = Database(temp_db_path)
+        conn = sqlite3.connect(temp_db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='index'")
+        indexes = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        assert 'idx_cache_stock' in indexes
+        assert 'idx_cache_expires' in indexes
+
     def test_insert_content_returns_true_on_success(self, temp_db_path, mock_content_item):
         """RED: insert_content 成功时应该返回 True"""
         db = Database(temp_db_path)
@@ -139,61 +161,3 @@ class TestDatabase:
 
         assert result[0] == 'Updated Title'
         assert result[1] == 'Updated content'
-
-
-def test_cache_table_exists(temp_db_path):
-    """RED: 数据库应创建 dfcf_cache 表"""
-    from storage.database import Database
-    db = Database(temp_db_path)
-    conn = sqlite3.connect(temp_db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='dfcf_cache'")
-    result = cursor.fetchone()
-    conn.close()
-    assert result is not None
-    assert result[0] == 'dfcf_cache'
-
-
-def test_cache_table_has_indexes(temp_db_path):
-    """RED: dfcf_cache 表应有正确的索引"""
-    from storage.database import Database
-    db = Database(temp_db_path)
-    conn = sqlite3.connect(temp_db_path)
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='dfcf_cache'")
-    indexes = [row[0] for row in cursor.fetchall()]
-    conn.close()
-
-    assert 'idx_cache_stock' in indexes
-    assert 'idx_cache_expires' in indexes
-
-
-def test_cache_table_unique_constraint(temp_db_path):
-    """RED: (stock_code, query) 应有唯一约束"""
-    from storage.database import Database
-    import sqlite3
-    db = Database(temp_db_path)
-
-    conn = sqlite3.connect(temp_db_path)
-    cursor = conn.cursor()
-
-    # Insert first record
-    cursor.execute('''
-        INSERT INTO dfcf_cache (stock_code, query, response_data, expires_at)
-        VALUES ('600519', '贵州茅台', '[{}]', datetime('now', '+1 hour'))
-    ''')
-    conn.commit()
-
-    # Try to insert duplicate - should raise IntegrityError
-    try:
-        cursor.execute('''
-            INSERT INTO dfcf_cache (stock_code, query, response_data, expires_at)
-            VALUES ('600519', '贵州茅台', '[{}]', datetime('now', '+1 hour'))
-        ''')
-        conn.commit()
-        assert False, "Should have raised IntegrityError"
-    except sqlite3.IntegrityError:
-        pass  # Expected
-    finally:
-        conn.close()

@@ -15,13 +15,7 @@ load_dotenv()
 # 添加项目路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from storage.database import Database
-
-# Try to import cache
-try:
-    from storage.dfcf_cache import DFCFCache
-    CACHE_AVAILABLE = True
-except ImportError:
-    CACHE_AVAILABLE = False
+from storage.dfcf_cache import DFCFCache
 
 
 class DFCFCollector:
@@ -36,11 +30,8 @@ class DFCFCollector:
         if not self.api_key:
             raise ValueError("MX_APIKEY not set")
 
-        # Initialize cache
-        if CACHE_AVAILABLE:
-            self.cache = DFCFCache(db_path)
-        else:
-            self.cache = None
+        # 初始化缓存
+        self.cache = DFCFCache(db_path)
 
     def load_holdings(self) -> Dict[str, str]:
         """加载持仓列表"""
@@ -57,20 +48,20 @@ class DFCFCollector:
         """
         搜索资讯（带缓存）
         """
-        # Extract stock code from query (format: "股票名 代码")
+        # 从查询中提取股票代码（假设格式: "股票名 代码"）
         stock_code = query.split()[-1] if ' ' in query else 'unknown'
 
-        # Try cache first
+        # 尝试读取缓存
         if self.cache:
             cached = self.cache.get(stock_code, query)
             if cached is not None:
                 print(f"    [CACHE HIT] {stock_code}")
                 return cached
 
-        # Cache miss - call API
+        # 缓存未命中，调用 API
         result = self._api_search(query)
 
-        # Store in cache (1 hour TTL)
+        # 写入缓存（1小时 TTL）
         if self.cache and result:
             self.cache.set(stock_code, query, result, ttl_hours=1)
 
@@ -240,6 +231,12 @@ class DFCFCollector:
                 time.sleep(self.REQUEST_DELAY)
 
         print(f"\nTotal saved: {len(all_items)}")
+
+        # 显示缓存统计
+        if self.cache:
+            stats = self.cache.get_stats()
+            print(f"Cache: {stats['valid']} valid, {stats['expired']} expired")
+
         return all_items
 
     def collect_snowball(self, limit_per_stock: int = 5) -> int:

@@ -80,10 +80,6 @@ def cmd_collect(args):
             dfcf_collector = DFCFCollector()
             dfcf_items = dfcf_collector.collect_all(limit_per_stock=5)
             print(f"    采集: {len(dfcf_items)} 条")
-            # 显示缓存统计
-            if dfcf_collector.cache:
-                stats = dfcf_collector.cache.get_stats()
-                print(f"    缓存: {stats['valid']} 有效, {stats['expired']} 过期")
             items.extend(dfcf_items)
         except Exception as e:
             print(f"    [ERROR] 东方财富采集失败: {e}")
@@ -273,7 +269,6 @@ def cmd_config(args):
 def cmd_cache(args):
     """缓存管理命令"""
     from storage.dfcf_cache import DFCFCache
-    from storage.database import Database
 
     db_path = DATA_DIR / 'mi7.db'
     cache = DFCFCache(str(db_path))
@@ -292,6 +287,9 @@ def cmd_cache(args):
         deleted = cache.clear_expired()
         print(f"已清理 {deleted} 条过期缓存")
 
+    if not args.stats and not args.clear_expired:
+        print("使用 --stats 查看缓存统计，或 --clear-expired 清理过期缓存")
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -305,6 +303,7 @@ def main():
   python scripts/run.py report                     # 生成报告
   python scripts/run.py run                        # 完整流程
   python scripts/run.py config --show              # 显示配置
+  python scripts/run.py cache --stats              # 缓存统计
         """
     )
 
@@ -347,10 +346,10 @@ def main():
 
     # cache 命令
     cache_parser = subparsers.add_parser('cache', help='缓存管理')
-    cache_parser.add_argument('--clear-expired', action='store_true',
-                              help='清理过期缓存')
     cache_parser.add_argument('--stats', action='store_true',
                               help='显示缓存统计')
+    cache_parser.add_argument('--clear-expired', action='store_true',
+                              help='清理过期缓存')
 
     args = parser.parse_args()
 
