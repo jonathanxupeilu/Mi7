@@ -61,9 +61,9 @@ class DFCFCollector:
         # 缓存未命中，调用 API
         result = self._api_search(query)
 
-        # 写入缓存（24小时 TTL）
+        # 写入缓存（48小时 TTL）
         if self.cache and result:
-            self.cache.set(stock_code, query, result, ttl_hours=24)
+            self.cache.set(stock_code, query, result, ttl_hours=48)
 
         return result
 

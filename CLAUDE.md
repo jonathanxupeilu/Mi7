@@ -26,14 +26,13 @@ These sources respect the `enabled` flag in `config/sources.yaml`:
 
 ## Usage Modes
 
-### Default Mode (`--source all`)
+### Default Mode (`python mi7.py`)
 ```bash
 python mi7.py
-# or explicitly
-python mi7.py --source all
 ```
-- Includes all **Tier 1** sources (mandatory)
-- Includes **Tier 2** sources if `enabled: true` in config
+- **Tier 1 sources only** (RSS + DFCF + NotebookLM)
+- **Audio enabled** (edge-tts, free)
+- Excludes Tier 2 paid sources
 
 ### Quick Mode (`--source quick`)
 ```bash
@@ -54,7 +53,7 @@ python mi7.py --source notebooklm  # NotebookLM only
 
 ### DFCF Cache
 - Location: `data/mi7.db` (dfcf_cache table)
-- TTL: **24 hours**
+- TTL: **48 hours**
 - Automatically refreshes when stale
 - Respects 50 calls/day free tier limit
 

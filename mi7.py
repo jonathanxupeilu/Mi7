@@ -165,10 +165,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='MI7 - 军情七处情报报告生成')
     parser.add_argument('--hours', type=int, default=48, help='采集最近多少小时的内容')
     parser.add_argument('--skip-analysis', action='store_true', help='跳过AI分析')
-    parser.add_argument('--source', type=str, default='all',
+    parser.add_argument('--source', type=str, default='quick',
                         choices=['all', 'quick', 'rss', 'dfcf', 'nitter', 'gmail', 'research', 'announcement', 'snowball', 'notebooklm'],
                         help='选择采集来源：all(全部), quick(仅Tier 1: RSS+DFCF+NotebookLM), rss, dfcf(东方财富), nitter, gmail, research(研报), announcement(公告), snowball(雪球), notebooklm')
-    parser.add_argument('--audio', action='store_true', help='同时生成MP3音频报告')
+    parser.add_argument('--audio', action='store_true', help='同时生成MP3音频报告（默认已启用）')
     parser.add_argument('--audio-provider', type=str, default='edge',
                         choices=['edge', 'elevenlabs'],
                         help='音频提供商: edge (免费) 或 elevenlabs (高质量)')
@@ -176,4 +176,4 @@ if __name__ == '__main__':
 
     mi7 = MI7()
     mi7.run(args.hours, skip_analysis=args.skip_analysis, source=args.source,
-            generate_audio=args.audio, audio_provider=args.audio_provider)
+            generate_audio=True, audio_provider=args.audio_provider)
