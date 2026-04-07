@@ -101,16 +101,16 @@ class AudioReportGenerator:
             # Combine all text
             full_text = "\n\n".join(cleaned_sections)
 
-            # Try edge-tts first (better quality)
-            if EDGE_TTS_AVAILABLE:
-                result = await self._try_edge_tts(full_text, str(output_path))
-                if result:
-                    return result
-                print("  Edge-TTS failed, trying fallback...")
-
-            # Fallback to gTTS
+            # Try gTTS first (more reliable in restricted networks)
             if GTTS_AVAILABLE:
                 result = self._try_gtts(full_text, str(output_path))
+                if result:
+                    return result
+                print("  gTTS failed, trying edge-tts...")
+
+            # Fallback to edge-tts (better quality)
+            if EDGE_TTS_AVAILABLE:
+                result = await self._try_edge_tts(full_text, str(output_path))
                 if result:
                     return result
 
