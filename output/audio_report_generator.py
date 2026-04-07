@@ -108,63 +108,73 @@ class AudioReportGenerator:
             return None
 
     async def _try_edge_tts(self, text: str, output_path: str, max_retries: int = 3) -> Optional[str]:
-        """Try edge-tts with retry logic and custom SSL context for Windows"""
+        """Try edge-tts with retry logic"""
         # Chunk if too long
         chunks = self._chunk_text(text, max_chars=5000)
 
         temp_files = []
 
-        # Create SSL context that works in restricted networks
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
+        # Monkey-patch aiohttp TCPConnector to bypass SSL verification
+        # This works around corporate/VPN SSL inspection
+        original_init = aiohttp.TCPConnector.__init__
 
-        # Create connector with custom SSL context
-        connector = aiohttp.TCPConnector(ssl=ssl_context)
+        def patched_init(self, *args, **kwargs):
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            kwargs['ssl'] = ssl_context
+            original_init(self, *args, **kwargs)
 
-        for attempt in range(max_retries):
-            try:
-                for i, chunk in enumerate(chunks):
-                    temp_path = self.output_dir / f"temp_{i}_{attempt}.mp3"
+        aiohttp.TCPConnector.__init__ = patched_init
 
-                    # Skip if already generated
-                    if temp_path.exists() and temp_path.stat().st_size > 0:
-                        temp_files.append(temp_path)
-                        continue
+        try:
+            for attempt in range(max_retries):
+                try:
+                    for i, chunk in enumerate(chunks):
+                        temp_path = self.output_dir / f"temp_{i}_{attempt}.mp3"
 
-                    communicate = edge_tts.Communicate(chunk, self.voice, connector=connector)
-                    await communicate.save(str(temp_path))
+                        # Skip if already generated
+                        if temp_path.exists() and temp_path.stat().st_size > 0:
+                            temp_files.append(temp_path)
+                            continue
 
-                    if temp_path.exists() and temp_path.stat().st_size > 0:
-                        temp_files.append(temp_path)
+                        communicate = edge_tts.Communicate(chunk, self.voice)
+                        await communicate.save(str(temp_path))
+
+                        if temp_path.exists() and temp_path.stat().st_size > 0:
+                            temp_files.append(temp_path)
+                        else:
+                            raise Exception(f"Empty output for chunk {i}")
+
+                    # Combine all chunks
+                    await self._combine_mp3_files(temp_files, output_path)
+
+                    # Cleanup temp files
+                    for temp_file in temp_files:
+                        temp_file.unlink(missing_ok=True)
+
+                    print(f"Audio report saved: {output_path}")
+                    return output_path
+
+                except Exception as e:
+                    print(f"  Edge-TTS attempt {attempt + 1}/{max_retries} failed: {e}")
+                    if attempt < max_retries - 1:
+                        wait_time = 2 ** attempt  # Exponential backoff
+                        print(f"  Retrying in {wait_time}s...")
+                        await asyncio.sleep(wait_time)
                     else:
-                        raise Exception(f"Empty output for chunk {i}")
+                        # Save partial results
+                        if temp_files:
+                            print(f"  Saving partial result ({len(temp_files)} chunks)")
+                            await self._combine_mp3_files(temp_files, output_path)
+                            # Don't cleanup - keep partial results
+                            return output_path
 
-                # Combine all chunks
-                await self._combine_mp3_files(temp_files, output_path)
+            return None
 
-                # Cleanup temp files
-                for temp_file in temp_files:
-                    temp_file.unlink(missing_ok=True)
-
-                print(f"Audio report saved: {output_path}")
-                return output_path
-
-            except Exception as e:
-                print(f"  Edge-TTS attempt {attempt + 1}/{max_retries} failed: {e}")
-                if attempt < max_retries - 1:
-                    wait_time = 2 ** attempt  # Exponential backoff
-                    print(f"  Retrying in {wait_time}s...")
-                    await asyncio.sleep(wait_time)
-                else:
-                    # Save partial results
-                    if temp_files:
-                        print(f"  Saving partial result ({len(temp_files)} chunks)")
-                        await self._combine_mp3_files(temp_files, output_path)
-                        # Don't cleanup - keep partial results
-                        return output_path
-
-        return None
+        finally:
+            # Restore original
+            aiohttp.TCPConnector.__init__ = original_init
 
     def _try_gtts(self, text: str, output_path: str, max_chars: int = 5000) -> Optional[str]:
         """Try gTTS (Google TTS) as fallback"""
