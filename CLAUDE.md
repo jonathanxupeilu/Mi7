@@ -54,7 +54,7 @@ python mi7.py --source notebooklm  # NotebookLM only
 
 ### DFCF Cache
 - Location: `data/mi7.db` (dfcf_cache table)
-- TTL: 4 hours
+- TTL: **24 hours**
 - Automatically refreshes when stale
 - Respects 50 calls/day free tier limit
 
