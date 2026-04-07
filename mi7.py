@@ -183,12 +183,15 @@ if __name__ == '__main__':
     parser.add_argument('--source', type=str, default='quick',
                         choices=['all', 'quick', 'rss', 'dfcf', 'nitter', 'gmail', 'research', 'announcement', 'snowball', 'notebooklm'],
                         help='选择采集来源：all(全部), quick(仅Tier 1: RSS+DFCF+NotebookLM), rss, dfcf(东方财富), nitter, gmail, research(研报), announcement(公告), snowball(雪球), notebooklm')
-    parser.add_argument('--audio', action='store_true', help='同时生成MP3音频报告（默认已启用）')
+    parser.add_argument('--audio', action='store_true', default=True, help='同时生成MP3音频报告（默认启用）')
+    parser.add_argument('--no-audio', action='store_true', help='禁用音频生成')
     parser.add_argument('--audio-provider', type=str, default='edge',
                         choices=['edge', 'elevenlabs'],
                         help='音频提供商: edge (免费) 或 elevenlabs (高质量)')
     args = parser.parse_args()
 
     mi7 = MI7()
+    # Audio is enabled by default, unless --no-audio is specified
+    generate_audio = args.audio and not args.no_audio
     mi7.run(args.hours, skip_analysis=args.skip_analysis, source=args.source,
-            generate_audio=True, audio_provider=args.audio_provider)
+            generate_audio=generate_audio, audio_provider=args.audio_provider)
