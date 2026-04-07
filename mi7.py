@@ -11,14 +11,29 @@ if sys.platform == 'win32':
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-import yaml
+# CRITICAL: Apply SSL monkey-patch BEFORE importing edge_tts/aiohttp
 import ssl
+try:
+    import aiohttp
+    _original_tcp_init = aiohttp.TCPConnector.__init__
+
+    def _patched_tcp_init(self, *args, **kwargs):
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        kwargs['ssl'] = ssl_context
+        _original_tcp_init(self, *args, **kwargs)
+
+    aiohttp.TCPConnector.__init__ = _patched_tcp_init
+    print("[SSL] Applied aiohttp TCPConnector patch for corporate network")
+except ImportError:
+    pass
+
+import yaml
 from datetime import datetime, timedelta
 from storage.database import Database
 from output.report_generator import ReportGenerator
 from core.source_orchestrator import SourceOrchestrator
-
-ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class MI7:

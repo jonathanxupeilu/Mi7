@@ -2,14 +2,32 @@
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from pathlib import Path
+import yaml
 
 
 class ReportGenerator:
     """TXT报告生成器"""
 
-    def __init__(self, output_dir: str = "./reports"):
+    # Default maximum number of items to include in report
+    DEFAULT_MAX_ITEMS = 60
+
+    def __init__(self, output_dir: str = "./reports", config_path: str = "./config/sources.yaml"):
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.max_items = self._load_max_items(config_path)
+
+    def _load_max_items(self, config_path: str) -> int:
+        """从配置文件加载最大条目数"""
+        try:
+            config_file = Path(config_path)
+            if config_file.exists():
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    config = yaml.safe_load(f)
+                if config and 'report' in config:
+                    return config['report'].get('max_items', self.DEFAULT_MAX_ITEMS)
+        except Exception as e:
+            print(f"  [Report] Using default max_items: {e}")
+        return self.DEFAULT_MAX_ITEMS
 
     def generate(self, date: datetime, items: List[Dict[str, Any]],
                  generate_audio: bool = False,
@@ -18,17 +36,19 @@ class ReportGenerator:
         if not items:
             return None
 
-        priority_groups = self._group_by_priority(items)
+        # Limit to MAX_ITEMS total, keeping highest priority/relevance
+        limited_items = self._limit_items(items)
+        priority_groups = self._group_by_priority(limited_items)
 
         # 生成 TXT 报告
-        txt_content = self._build_report(date, priority_groups, items)
+        txt_content = self._build_report(date, priority_groups, limited_items)
         txt_filename = f"mi7_report_{date.strftime('%Y-%m-%d')}.txt"
         txt_filepath = self.output_dir / txt_filename
         with open(txt_filepath, 'w', encoding='utf-8') as f:
             f.write(txt_content)
 
         # 生成 Markdown 报告
-        md_content = self._build_markdown_report(date, priority_groups, items)
+        md_content = self._build_markdown_report(date, priority_groups, limited_items)
         md_filename = f"mi7_report_{date.strftime('%Y-%m-%d')}.md"
         md_filepath = self.output_dir / md_filename
         with open(md_filepath, 'w', encoding='utf-8') as f:
@@ -243,3 +263,32 @@ class ReportGenerator:
             lines.append(f"   原文链接: {url}")
         lines.append("")
         return lines
+
+    def _limit_items(self, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        限制报告条目数量，保留最高优先级和相关性的条目
+
+        Args:
+            items: 原始条目列表
+
+        Returns:
+            限制后的条目列表（最多MAX_ITEMS条）
+        """
+        if len(items) <= self.max_items:
+            return items
+
+        # Sort by priority order and relevance score
+        priority_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
+
+        sorted_items = sorted(items, key=lambda x: (
+            priority_order.get(x.get('priority', 'low'), 3),
+            -x.get('relevance_score', 0)
+        ))
+
+        # Take top max_items
+        limited = sorted_items[:self.max_items]
+
+        # Log the limiting
+        print(f"  [Report] Limited {len(items)} items to {len(limited)} (max: {self.max_items})")
+
+        return limited

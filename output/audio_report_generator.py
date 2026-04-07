@@ -107,25 +107,26 @@ class AudioReportGenerator:
             # Combine all text
             full_text = "\n\n".join(cleaned_sections)
 
-            # Try gTTS first (more reliable in restricted networks)
+            # Priority 1: Local pyttsx3 (no network, most reliable)
+            if PYTTSX3_AVAILABLE:
+                result = self._try_pyttsx3(full_text, str(output_path))
+                if result:
+                    return result
+                print("  Local TTS failed, trying online providers...")
+
+            # Priority 2: gTTS (Google TTS, better quality than local)
             if GTTS_AVAILABLE:
                 result = self._try_gtts(full_text, str(output_path))
                 if result:
                     return result
                 print("  gTTS failed, trying edge-tts...")
 
-            # Fallback to edge-tts (better quality)
+            # Priority 3: edge-tts (best quality but WebSocket dependent)
             if EDGE_TTS_AVAILABLE:
                 result = await self._try_edge_tts(full_text, str(output_path))
                 if result:
                     return result
-                print("  Edge-TTS failed, trying local TTS...")
-
-            # Final fallback: local pyttsx3 (no network)
-            if PYTTSX3_AVAILABLE:
-                result = self._try_pyttsx3(full_text, str(output_path))
-                if result:
-                    return result
+                print("  Edge-TTS failed")
 
             print("  All TTS providers failed")
             return None

@@ -1,3 +1,11 @@
+# MI7 Source Configuration
+
+report:
+  # Maximum number of items to include in daily report
+  max_items: 60
+  # Time window in hours (default: 48)
+  time_window: 48
+
 sources:
   rss:
     enabled: true
