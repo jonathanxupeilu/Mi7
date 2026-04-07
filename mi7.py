@@ -33,14 +33,6 @@ class MI7:
         print("MI7 - Intelligence Report Generation")
         print("="*60)
         print(f"\nTime window: last {hours} hours")
-        print(f"Source: {source}\n")
-
-    def run(self, hours=48, skip_analysis=False, source='all', generate_audio=False, audio_provider='edge'):
-        """运行完整流程：采集 → 存储 → AI分析 → 生成报告"""
-        print("="*60)
-        print("MI7 - Intelligence Report Generation")
-        print("="*60)
-        print(f"\nTime window: last {hours} hours")
         print(f"Source mode: {source}\n")
 
         # Initialize orchestrator for smart source selection
