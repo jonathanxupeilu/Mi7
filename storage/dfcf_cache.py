@@ -19,8 +19,8 @@ class DFCFCache:
 
     def get(self, stock_code: str, query: str) -> Optional[List[Dict[str, Any]]]:
         """
-        获取缓存的 API 响应
-        Returns: 缓存数据或 None（如果缓存不存在或已过期）
+        获取缓存的 API 响应（包括过期缓存）
+        Returns: 缓存数据或 None（如果缓存不存在）
         """
         conn = self._get_connection()
         cursor = conn.cursor()
@@ -28,8 +28,44 @@ class DFCFCache:
         cursor.execute('''
             SELECT response_data FROM dfcf_cache
             WHERE stock_code = ? AND query = ?
+        ''', (stock_code, query))
+
+        row = cursor.fetchone()
+        conn.close()
+
+        if row:
+            return json.loads(row[0])
+        return None
+
+    def is_fresh(self, stock_code: str, query: str) -> bool:
+        """检查缓存是否新鲜（未过期）"""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT 1 FROM dfcf_cache
+            WHERE stock_code = ? AND query = ?
             AND expires_at > ?
-        ''', (stock_code, query, datetime.now()))
+        ''', (stock_code, query, datetime.now().isoformat()))
+
+        row = cursor.fetchone()
+        conn.close()
+
+        return row is not None
+
+    def get_expired(self, stock_code: str, query: str) -> Optional[List[Dict[str, Any]]]:
+        """
+        获取过期的缓存数据（用于降级模式）
+        Returns: 过期缓存数据或 None
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT response_data FROM dfcf_cache
+            WHERE stock_code = ? AND query = ?
+            AND expires_at <= ?
+        ''', (stock_code, query, datetime.now().isoformat()))
 
         row = cursor.fetchone()
         conn.close()

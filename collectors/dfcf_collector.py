@@ -46,26 +46,45 @@ class DFCFCollector:
 
     def search_news(self, query: str) -> List[Dict[str, Any]]:
         """
-        搜索资讯（带缓存）
+        搜索资讯（带缓存和降级模式）
+        1. 优先使用新鲜缓存
+        2. 缓存未命中时调用API
+        3. API失败时使用过期缓存（降级模式）
         """
         # 从查询中提取股票代码（假设格式: "股票名 代码"）
         stock_code = query.split()[-1] if ' ' in query else 'unknown'
 
-        # 尝试读取缓存
+        # 尝试读取缓存（新鲜或过期）
         if self.cache:
             cached = self.cache.get(stock_code, query)
             if cached is not None:
-                print(f"    [CACHE HIT] {stock_code}")
-                return cached
+                # 检查是否新鲜
+                is_fresh = self.cache.is_fresh(stock_code, query)
+                if is_fresh:
+                    print(f"    [CACHE HIT] {stock_code}")
+                    return cached
+                else:
+                    # 过期缓存，先尝试API
+                    print(f"    [CACHE EXPIRED] {stock_code}, trying API...")
 
-        # 缓存未命中，调用 API
+        # 缓存未命中或已过期，调用API
         result = self._api_search(query)
 
-        # 写入缓存（48小时 TTL）
-        if self.cache and result:
-            self.cache.set(stock_code, query, result, ttl_hours=48)
+        # API调用成功，写入缓存
+        if result:
+            if self.cache:
+                self.cache.set(stock_code, query, result, ttl_hours=48)
+            return result
 
-        return result
+        # API调用失败（如达到速率限制），使用过期缓存作为降级
+        if self.cache:
+            expired_cached = self.cache.get_expired(stock_code, query)
+            if expired_cached is not None:
+                print(f"    [DEGRADATION] Using expired cache for {stock_code}")
+                return expired_cached
+
+        # 无任何缓存，返回空
+        return []
 
     def _api_search(self, query: str) -> List[Dict[str, Any]]:
         """
