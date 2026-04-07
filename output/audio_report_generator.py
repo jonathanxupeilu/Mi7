@@ -9,6 +9,7 @@ from datetime import datetime
 
 try:
     import edge_tts
+    import aiohttp
     EDGE_TTS_AVAILABLE = True
 except ImportError:
     EDGE_TTS_AVAILABLE = False
@@ -107,39 +108,47 @@ class AudioReportGenerator:
             return None
 
     async def _try_edge_tts(self, text: str, output_path: str, max_retries: int = 3) -> Optional[str]:
-        """Try edge-tts with retry logic"""
+        """Try edge-tts with retry logic and custom SSL context for Windows"""
         # Chunk if too long
         chunks = self._chunk_text(text, max_chars=5000)
 
         temp_files = []
 
+        # Create SSL context that works in restricted networks
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+
         for attempt in range(max_retries):
             try:
-                for i, chunk in enumerate(chunks):
-                    temp_path = self.output_dir / f"temp_{i}_{attempt}.mp3"
+                # Create custom client session with SSL context
+                connector = aiohttp.TCPConnector(ssl=ssl_context)
+                async with aiohttp.ClientSession(connector=connector) as session:
+                    for i, chunk in enumerate(chunks):
+                        temp_path = self.output_dir / f"temp_{i}_{attempt}.mp3"
 
-                    # Skip if already generated
-                    if temp_path.exists() and temp_path.stat().st_size > 0:
-                        temp_files.append(temp_path)
-                        continue
+                        # Skip if already generated
+                        if temp_path.exists() and temp_path.stat().st_size > 0:
+                            temp_files.append(temp_path)
+                            continue
 
-                    communicate = edge_tts.Communicate(chunk, self.voice)
-                    await communicate.save(str(temp_path))
+                        communicate = edge_tts.Communicate(chunk, self.voice, http_client=session)
+                        await communicate.save(str(temp_path))
 
-                    if temp_path.exists() and temp_path.stat().st_size > 0:
-                        temp_files.append(temp_path)
-                    else:
-                        raise Exception(f"Empty output for chunk {i}")
+                        if temp_path.exists() and temp_path.stat().st_size > 0:
+                            temp_files.append(temp_path)
+                        else:
+                            raise Exception(f"Empty output for chunk {i}")
 
-                # Combine all chunks
-                await self._combine_mp3_files(temp_files, output_path)
+                    # Combine all chunks
+                    await self._combine_mp3_files(temp_files, output_path)
 
-                # Cleanup temp files
-                for temp_file in temp_files:
-                    temp_file.unlink(missing_ok=True)
+                    # Cleanup temp files
+                    for temp_file in temp_files:
+                        temp_file.unlink(missing_ok=True)
 
-                print(f"Audio report saved: {output_path}")
-                return output_path
+                    print(f"Audio report saved: {output_path}")
+                    return output_path
 
             except Exception as e:
                 print(f"  Edge-TTS attempt {attempt + 1}/{max_retries} failed: {e}")
