@@ -34,6 +34,12 @@ try:
 except ImportError:
     GTTS_AVAILABLE = False
 
+try:
+    import pyttsx3
+    PYTTSX3_AVAILABLE = True
+except ImportError:
+    PYTTSX3_AVAILABLE = False
+
 
 class AudioReportGenerator:
     """Generate MP3 audio reports from markdown files"""
@@ -111,6 +117,13 @@ class AudioReportGenerator:
             # Fallback to edge-tts (better quality)
             if EDGE_TTS_AVAILABLE:
                 result = await self._try_edge_tts(full_text, str(output_path))
+                if result:
+                    return result
+                print("  Edge-TTS failed, trying local TTS...")
+
+            # Final fallback: local pyttsx3 (no network)
+            if PYTTSX3_AVAILABLE:
+                result = self._try_pyttsx3(full_text, str(output_path))
                 if result:
                     return result
 
@@ -201,6 +214,38 @@ class AudioReportGenerator:
 
         except Exception as e:
             print(f"  gTTS failed: {e}")
+
+        return None
+
+    def _try_pyttsx3(self, text: str, output_path: str) -> Optional[str]:
+        """Try pyttsx3 (local TTS, no network required)"""
+        try:
+            import pyttsx3
+
+            # Initialize TTS engine
+            engine = pyttsx3.init()
+
+            # Set properties
+            engine.setProperty('rate', 150)  # Speed
+            engine.setProperty('volume', 0.9)  # Volume
+
+            # Try to set Chinese voice if available
+            voices = engine.getProperty('voices')
+            for voice in voices:
+                if 'chinese' in voice.name.lower() or 'zh' in voice.id.lower():
+                    engine.setProperty('voice', voice.id)
+                    break
+
+            # Save to file
+            engine.save_to_file(text, output_path)
+            engine.runAndWait()
+
+            if Path(output_path).exists() and Path(output_path).stat().st_size > 0:
+                print(f"Audio report saved (via pyttsx3): {output_path}")
+                return output_path
+
+        except Exception as e:
+            print(f"  pyttsx3 failed: {e}")
 
         return None
 
