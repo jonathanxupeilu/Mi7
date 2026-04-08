@@ -118,3 +118,24 @@ sources:
       - "peter schiff"
       - "jim rogers"
       - "ray dalio"
+
+  obsidian:
+    enabled: true
+    description: "Obsidian 笔记库"
+    vault_path: "E:/makeAlife/VaultTech/Vault Tech"
+    folders:
+      - "04-资源"
+      - "03-领域"
+    keywords:
+      - "投资"
+      - "股票"
+      - "分析"
+      - "财务"
+      - "持仓"
+      - "宏观"
+      - "行业"
+    tags:
+      - "investing"
+      - "finance"
+      - "stock"
+      - "analysis"

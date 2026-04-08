@@ -19,7 +19,7 @@ class SourceOrchestrator:
     """Orchestrates data sources with smart API conservation strategy."""
 
     # Tier 1: Always on, proactive caching
-    TIER1_SOURCES = ['rss', 'dfcf', 'notebooklm']
+    TIER1_SOURCES = ['rss', 'dfcf', 'notebooklm', 'obsidian']
 
     # Tier 2: Conditional/paid sources
     TIER2_SOURCES = ['research', 'announcement', 'snowball']
@@ -39,7 +39,7 @@ class SourceOrchestrator:
                 name=source_name,
                 tier=1,
                 enabled=True,  # Mandatory - always enabled
-                supports_caching=source_name in ['dfcf', 'notebooklm'],
+                supports_caching=source_name in ['dfcf', 'notebooklm', 'obsidian'],
                 cache_ttl_hours=4 if source_name == 'dfcf' else 24
             )
 

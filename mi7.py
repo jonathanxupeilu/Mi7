@@ -88,6 +88,18 @@ class MI7:
             except Exception as e:
                 print(f"  NotebookLM error: {e}")
 
+        if 'obsidian' in sources_to_use:
+            try:
+                from collectors.obsidian_collector import ObsidianCollector
+                print("\n  Collecting from Obsidian Vault...")
+                obsidian_config = self.config['sources']['obsidian']
+                obsidian_collector = ObsidianCollector(obsidian_config)
+                obsidian_items = obsidian_collector.collect(hours=hours)
+                print(f"  Obsidian: {len(obsidian_items)} items")
+                items.extend(obsidian_items)
+            except Exception as e:
+                print(f"  Obsidian error: {e}")
+
         # Tier 2 sources (conditional/paid)
         if 'research' in sources_to_use:
             try:
