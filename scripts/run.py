@@ -45,7 +45,7 @@ def cmd_collect(args):
     from collectors.rss_collector import RSSCollector
     from collectors.dfcf_collector import DFCFCollector
     from collectors.nitter_collector import NitterCollector
-    from collectors.notebooklm_collector import NotebookLMCollector
+    from collectors.obsidian_collector import ObsidianCollector
     from collectors.gmail_collector import GmailCollector
     from storage.database import Database
     import yaml
@@ -93,14 +93,14 @@ def cmd_collect(args):
             print(f"    采集: {len(nitter_items)} 条")
             items.extend(nitter_items)
 
-    if args.source in ['all', 'notebooklm']:
-        if config['sources'].get('notebooklm', {}).get('enabled', False):
-            print("\n[4] 采集 NotebookLM...")
-            notebooklm_config = config['sources']['notebooklm']
-            notebooklm_collector = NotebookLMCollector(notebooklm_config)
-            notebooklm_items = notebooklm_collector.collect(hours=args.hours)
-            print(f"    采集: {len(notebooklm_items)} 条")
-            items.extend(notebooklm_items)
+    if args.source in ['all', 'obsidian']:
+        if config['sources'].get('obsidian', {}).get('enabled', False):
+            print("\n[4] 采集 Obsidian Vault...")
+            obsidian_config = config['sources']['obsidian']
+            obsidian_collector = ObsidianCollector(obsidian_config)
+            obsidian_items = obsidian_collector.collect(hours=args.hours)
+            print(f"    采集: {len(obsidian_items)} 条")
+            items.extend(obsidian_items)
 
     if args.source in ['all', 'gmail']:
         try:
@@ -314,7 +314,7 @@ def main():
     collect_parser.add_argument('--hours', type=int, default=24,
                                 help='采集最近多少小时的内容 (默认: 24)')
     collect_parser.add_argument('--source', type=str, default='all',
-                                choices=['all', 'rss', 'dfcf', 'nitter', 'notebooklm', 'gmail'],
+                                choices=['all', 'rss', 'dfcf', 'nitter', 'obsidian', 'gmail'],
                                 help='选择采集来源')
 
     # analyze 命令
@@ -333,7 +333,7 @@ def main():
     run_parser = subparsers.add_parser('run', help='完整流程')
     run_parser.add_argument('--hours', type=int, default=24)
     run_parser.add_argument('--source', type=str, default='all',
-                            choices=['all', 'rss', 'dfcf', 'nitter', 'notebooklm', 'gmail'])
+                            choices=['all', 'rss', 'dfcf', 'nitter', 'obsidian', 'gmail'])
     run_parser.add_argument('--skip-analysis', action='store_true',
                             help='跳过 AI 分析')
 

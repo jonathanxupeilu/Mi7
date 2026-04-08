@@ -13,7 +13,7 @@ These sources are **mandatory** and always included in default mode:
 |--------|------|---------|-----|
 | RSS | Free | No | N/A |
 | DFCF (东方财富) | Free tier | Yes | 4 hours |
-| NotebookLM | Paid (Claude API) | Yes | 24 hours |
+| Obsidian | Free (local) | Yes | 24 hours |
 
 ### Tier 2: Conditional (Paid APIs)
 These sources respect the `enabled` flag in `config/sources.yaml`:
@@ -30,15 +30,15 @@ These sources respect the `enabled` flag in `config/sources.yaml`:
 ```bash
 python mi7.py
 ```
-- **Tier 1 sources only** (RSS + DFCF + NotebookLM)
-- **Audio enabled** (edge-tts, free)
+- **Tier 1 sources only** (RSS + DFCF + Obsidian)
+- **Audio enabled** (pyttsx3, local)
 - Excludes Tier 2 paid sources
 
 ### Quick Mode (`--source quick`)
 ```bash
 python mi7.py --source quick
 ```
-- Only Tier 1 sources (RSS + DFCF + NotebookLM)
+- Only Tier 1 sources (RSS + DFCF + Obsidian)
 - Skips all paid Tier 2 sources
 - Fastest execution, minimal API costs
 
@@ -46,7 +46,7 @@ python mi7.py --source quick
 ```bash
 python mi7.py --source rss      # RSS only
 python mi7.py --source dfcf     # DFCF only
-python mi7.py --source notebooklm  # NotebookLM only
+python mi7.py --source obsidian # Obsidian Vault only
 ```
 
 ## Caching Strategy
@@ -57,11 +57,11 @@ python mi7.py --source notebooklm  # NotebookLM only
 - Automatically refreshes when stale
 - Respects 50 calls/day free tier limit
 
-### NotebookLM Cache
-- Location: `data/mi7.db` (notebooklm_cache table)
+### Obsidian Cache
+- Location: Local file system
 - TTL: 24 hours
-- Caches Claude API analysis results
-- Significantly reduces API costs
+- Scans markdown files from configured vault
+- Parses frontmatter, tags, and wikilinks
 
 ## Implementation
 
@@ -91,7 +91,7 @@ sources:
     enabled: true
   dfcf:
     enabled: true
-  notebooklm:
+  obsidian:
     enabled: true
   research:
     enabled: false  # Tier 2: respects this flag

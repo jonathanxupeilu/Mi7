@@ -106,7 +106,7 @@ class TestCmdCollect:
             'sources': {
                 'rss': {'native': {'enabled': True, 'feeds': []}},
                 'nitter': {'enabled': False},
-                'notebooklm': {'enabled': False}
+                'obsidian': {'enabled': False}
             }
         }
         mock_yaml.return_value = mock_config

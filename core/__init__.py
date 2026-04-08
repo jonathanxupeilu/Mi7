@@ -1,4 +1,4 @@
 """Core module for MI7."""
-from .source_orchestrator import SourceOrchestrator, SourceConfig, NotebookLMCache
+from .source_orchestrator import SourceOrchestrator, SourceConfig
 
-__all__ = ['SourceOrchestrator', 'SourceConfig', 'NotebookLMCache']
+__all__ = ['SourceOrchestrator', 'SourceConfig']

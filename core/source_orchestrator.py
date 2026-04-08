@@ -19,7 +19,7 @@ class SourceOrchestrator:
     """Orchestrates data sources with smart API conservation strategy."""
 
     # Tier 1: Always on, proactive caching
-    TIER1_SOURCES = ['rss', 'dfcf', 'notebooklm', 'obsidian']
+    TIER1_SOURCES = ['rss', 'dfcf', 'obsidian']
 
     # Tier 2: Conditional/paid sources
     TIER2_SOURCES = ['research', 'announcement', 'snowball']
@@ -39,7 +39,7 @@ class SourceOrchestrator:
                 name=source_name,
                 tier=1,
                 enabled=True,  # Mandatory - always enabled
-                supports_caching=source_name in ['dfcf', 'notebooklm', 'obsidian'],
+                supports_caching=source_name in ['dfcf', 'obsidian'],
                 cache_ttl_hours=4 if source_name == 'dfcf' else 24
             )
 
@@ -87,88 +87,3 @@ class SourceOrchestrator:
         """Get cache TTL in hours for source."""
         source = self.sources.get(source_name)
         return source.cache_ttl_hours if source else 4
-
-
-class NotebookLMCache:
-    """Cache for NotebookLM analysis results."""
-
-    def __init__(self, db_path: str):
-        self.db_path = db_path
-        self._ensure_table()
-
-    def _ensure_table(self):
-        """Ensure cache table exists."""
-        import sqlite3
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS notebooklm_cache (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                query TEXT UNIQUE NOT NULL,
-                response_data TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP NOT NULL
-            )
-        ''')
-        conn.commit()
-        conn.close()
-
-    def get(self, query: str) -> Optional[Dict[str, Any]]:
-        """Get cached analysis if fresh."""
-        import sqlite3
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        # Use ISO format string for datetime comparison
-        now_str = datetime.now().isoformat()
-        cursor.execute('''
-            SELECT response_data FROM notebooklm_cache
-            WHERE query = ? AND expires_at > ?
-        ''', (query, now_str))
-
-        row = cursor.fetchone()
-        conn.close()
-
-        if row:
-            return json.loads(row[0])
-        return None
-
-    def set(self, query: str, data: Dict[str, Any], ttl_hours: int = 24):
-        """Cache analysis result."""
-        import sqlite3
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        expires_at = (datetime.now() + timedelta(hours=ttl_hours)).isoformat()
-
-        def serialize_datetime(obj):
-            if isinstance(obj, datetime):
-                return obj.isoformat()
-            raise TypeError(f'Object of type {type(obj)} is not JSON serializable')
-
-        cursor.execute('''
-            INSERT OR REPLACE INTO notebooklm_cache
-            (query, response_data, expires_at)
-            VALUES (?, ?, ?)
-        ''', (query, json.dumps(data, default=serialize_datetime), expires_at))
-
-        conn.commit()
-        conn.close()
-
-    def is_fresh(self, query: str) -> bool:
-        """Check if cache entry is fresh."""
-        return self.get(query) is not None
-
-    def clear_expired(self) -> int:
-        """Clear expired cache entries."""
-        import sqlite3
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        now_str = datetime.now().isoformat()
-        cursor.execute('DELETE FROM notebooklm_cache WHERE expires_at < ?',
-                       (now_str,))
-        deleted = cursor.rowcount
-        conn.commit()
-        conn.close()
-        return deleted

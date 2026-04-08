@@ -102,23 +102,6 @@ sources:
     description: "雪球热帖讨论"
     limit_per_stock: 5
 
-  notebooklm:
-    enabled: true
-    description: "NotebookLM 知识库"
-    notebook_url: "https://notebooklm.google.com/notebook/972f8723-f63c-40d8-946b-e9f4e9c18a4f"
-    keywords:
-      - "economy"
-      - "debt"
-      - "investment"
-      - "stock"
-      - "louis gave"
-      - "inflation"
-      - "macro"
-      - "geopolitical"
-      - "peter schiff"
-      - "jim rogers"
-      - "ray dalio"
-
   obsidian:
     enabled: true
     description: "Obsidian 笔记库"

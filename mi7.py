@@ -76,18 +76,6 @@ class MI7:
             dfcf_items = dfcf_collector.collect_all(limit_per_stock=5)
             print(f"  东方财富 collected: {dfcf_items} items")
 
-        if 'notebooklm' in sources_to_use:
-            try:
-                from collectors.notebooklm_collector import NotebookLMCollector
-                print("\n  Collecting from NotebookLM...")
-                notebooklm_config = self.config['sources']['notebooklm']
-                notebooklm_collector = NotebookLMCollector(notebooklm_config)
-                notebooklm_items = notebooklm_collector.collect(hours=hours)
-                print(f"  NotebookLM: {len(notebooklm_items)} items")
-                items.extend(notebooklm_items)
-            except Exception as e:
-                print(f"  NotebookLM error: {e}")
-
         if 'obsidian' in sources_to_use:
             try:
                 from collectors.obsidian_collector import ObsidianCollector
@@ -193,8 +181,8 @@ if __name__ == '__main__':
     parser.add_argument('--hours', type=int, default=48, help='采集最近多少小时的内容')
     parser.add_argument('--skip-analysis', action='store_true', help='跳过AI分析')
     parser.add_argument('--source', type=str, default='quick',
-                        choices=['all', 'quick', 'rss', 'dfcf', 'nitter', 'gmail', 'research', 'announcement', 'snowball', 'notebooklm'],
-                        help='选择采集来源：all(全部), quick(仅Tier 1: RSS+DFCF+NotebookLM), rss, dfcf(东方财富), nitter, gmail, research(研报), announcement(公告), snowball(雪球), notebooklm')
+                        choices=['all', 'quick', 'rss', 'dfcf', 'obsidian', 'nitter', 'gmail', 'research', 'announcement', 'snowball'],
+                        help='选择采集来源：all(全部), quick(仅Tier 1: RSS+DFCF+Obsidian), rss, dfcf(东方财富), obsidian(笔记库), nitter, gmail, research(研报), announcement(公告), snowball(雪球)')
     parser.add_argument('--audio', action='store_true', default=True, help='同时生成MP3音频报告（默认启用）')
     parser.add_argument('--no-audio', action='store_true', help='禁用音频生成')
     parser.add_argument('--audio-provider', type=str, default='edge',
