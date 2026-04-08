@@ -1,0 +1,121 @@
+portfolio:
+  # 根据 mx-zixuan 自选股配置的 A 股持仓
+  601898:
+    name: "中煤能源"
+    sector: "煤炭"
+    weight: 0.05
+    aliases: ["中煤能源", "601898", "中煤"]
+
+  000807:
+    name: "云铝股份"
+    sector: "有色金属"
+    weight: 0.05
+    aliases: ["云铝股份", "000807", "云铝"]
+
+  600938:
+    name: "中国海油"
+    sector: "石油"
+    weight: 0.05
+    aliases: ["中国海油", "600938", "中海油"]
+
+  001965:
+    name: "招商公路"
+    sector: "交通"
+    weight: 0.05
+    aliases: ["招商公路", "001965"]
+
+  600886:
+    name: "国投电力"
+    sector: "电力"
+    weight: 0.05
+    aliases: ["国投电力", "600886"]
+
+  000333:
+    name: "美的集团"
+    sector: "家电"
+    weight: 0.05
+    aliases: ["美的集团", "000333", "美的"]
+
+  000858:
+    name: "五粮液"
+    sector: "白酒"
+    weight: 0.05
+    aliases: ["五粮液", "000858"]
+
+  600900:
+    name: "长江电力"
+    sector: "电力"
+    weight: 0.05
+    aliases: ["长江电力", "600900"]
+
+  600887:
+    name: "伊利股份"
+    sector: "乳制品"
+    weight: 0.05
+    aliases: ["伊利股份", "600887", "伊利"]
+
+  600519:
+    name: "贵州茅台"
+    sector: "白酒"
+    weight: 0.08
+    aliases: ["贵州茅台", "600519", "茅台", "MT"]
+
+  000651:
+    name: "格力电器"
+    sector: "家电"
+    weight: 0.05
+    aliases: ["格力电器", "000651", "格力"]
+
+  600009:
+    name: "上海机场"
+    sector: "机场"
+    weight: 0.05
+    aliases: ["上海机场", "600009"]
+
+  002738:
+    name: "中矿资源"
+    sector: "有色金属"
+    weight: 0.05
+    aliases: ["中矿资源", "002738"]
+
+  601318:
+    name: "中国平安"
+    sector: "保险"
+    weight: 0.05
+    aliases: ["中国平安", "601318", "平安"]
+
+  300059:
+    name: "东方财富"
+    sector: "金融"
+    weight: 0.05
+    aliases: ["东方财富", "300059", "东财"]
+
+  600547:
+    name: "山东黄金"
+    sector: "黄金"
+    weight: 0.05
+    aliases: ["山东黄金", "600547"]
+
+  603993:
+    name: "洛阳钼业"
+    sector: "有色金属"
+    weight: 0.05
+    aliases: ["洛阳钼业", "603993"]
+
+  601899:
+    name: "紫金矿业"
+    sector: "有色金属"
+    weight: 0.05
+    aliases: ["紫金矿业", "601899", "紫金"]
+
+  600489:
+    name: "中金黄金"
+    sector: "黄金"
+    weight: 0.05
+    aliases: ["中金黄金", "600489"]
+
+  000426:
+    name: "兴业银锡"
+    sector: "有色金属"
+    weight: 0.05
+    aliases: ["兴业银锡", "000426"]

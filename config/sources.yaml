@@ -1,0 +1,124 @@
+# MI7 Source Configuration
+
+report:
+  # Maximum number of items to include in daily report
+  max_items: 60
+  # Time window in hours (default: 48)
+  time_window: 48
+
+sources:
+  rss:
+    enabled: true
+    native:
+      enabled: true
+      feeds:
+        - id: "yahoo_finance"
+          name: "Yahoo Finance"
+          url: "https://finance.yahoo.com/news/rssindex"
+          priority: "high"
+
+        - id: "github_blog"
+          name: "GitHub Blog"
+          url: "https://github.blog/feed/"
+          priority: "medium"
+
+        - id: "cnbc"
+          name: "CNBC"
+          url: "https://www.cnbc.com/id/100003114/device/rss/rss.html"
+          priority: "high"
+
+        - id: "seekingalpha"
+          name: "Seeking Alpha"
+          url: "https://seekingalpha.com/feed.xml"
+          priority: "medium"
+
+        - id: "zerohedge"
+          name: "ZeroHedge"
+          url: "https://feeds.feedburner.com/zerohedge/feed"
+          priority: "medium"
+
+        - id: "bloomberg"
+          name: "Bloomberg Markets"
+          url: "https://feeds.bloomberg.com/markets/news.rss"
+          priority: "high"
+
+        - id: "reuters"
+          name: "Reuters Business"
+          url: "https://www.reutersagency.com/feed/?best-topics=business-finance&post_type=reuters-best"
+          priority: "high"
+
+        - id: "ft"
+          name: "Financial Times"
+          url: "https://www.ft.com/?format=rss"
+          priority: "high"
+
+        - id: "wsj"
+          name: "Wall Street Journal"
+          url: "https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml"
+          priority: "high"
+
+        - id: "marketwatch"
+          name: "MarketWatch"
+          url: "https://www.marketwatch.com/rss/topstories"
+          priority: "medium"
+
+        - id: "economist"
+          name: "The Economist"
+          url: "https://www.economist.com/finance-and-economics/rss.xml"
+          priority: "medium"
+
+        - id: "investing"
+          name: "Investing.com"
+          url: "https://www.investing.com/rss/news.rss"
+          priority: "medium"
+
+        # 中文财经RSS
+        - id: "ft_chinese"
+          name: "FT中文网"
+          url: "https://www.ftchinese.com/rss/news"
+          priority: "high"
+
+  dfcf:
+    enabled: true
+    # 东方财富技能采集持仓新闻
+
+  # Nitter 已删除 - 不稳定
+  # nitter:
+  #   enabled: false
+
+  research:
+    enabled: true
+    description: "券商研究报告"
+    limit_per_stock: 5
+
+  announcement:
+    enabled: true
+    description: "公司公告（年报、季报、回购等）"
+    keywords: ["年报", "季报", "回购", "减持", "分红", "业绩预告", "重大事项"]
+    limit_per_stock: 5
+
+  snowball:
+    enabled: true
+    description: "雪球热帖讨论"
+    limit_per_stock: 5
+
+  obsidian:
+    enabled: true
+    description: "Obsidian 笔记库"
+    vault_path: "E:/makeAlife/VaultTech/Vault Tech"
+    folders:
+      - "04-资源"
+      - "03-领域"
+    keywords:
+      - "投资"
+      - "股票"
+      - "分析"
+      - "财务"
+      - "持仓"
+      - "宏观"
+      - "行业"
+    tags:
+      - "investing"
+      - "finance"
+      - "stock"
+      - "analysis"

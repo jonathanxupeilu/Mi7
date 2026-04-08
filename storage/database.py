@@ -40,7 +40,7 @@ class Database:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_content_url ON content(url)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_content_date ON content(published_at)')
 
-        # Create cache table for 东方财富 API responses
+        # DFCF缓存表
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS dfcf_cache (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

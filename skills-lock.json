@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "create-github-action-workflow-specification": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "527e6c77d921d58a9d0059aa95d0d14b441d2166f9c20518263048a56ca8fbbb"
+    },
+    "elevenlabs-tts": {
+      "source": "inferen-sh/skills",
+      "sourceType": "github",
+      "computedHash": "07f86f131f37b7e7297584eee7386ec58c7bc39f286e3b8c3ecb6814a2d363fd"
+    }
+  }
+}
